@@ -1,0 +1,12 @@
+{
+    "person": "Who {2} the {0}{1}",
+    "place": "Where {2} the {0} location{1}",
+    "thing": "What {2} the {0}{1}",
+    "random": [
+        "I have no info on this.",
+        "Does this have todo with the current context?",
+        "I don't understand",
+        "Please provide questions relating to the current context",
+        "No sure what you mean"
+    ]
+}
