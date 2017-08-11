@@ -1,6 +1,8 @@
 #! /usr/bin/env node
 'use strict';
 
+const path = require('path');
+
 // import Sugar to do some cool tricks on memories
 require('sugar/polyfills/es6');
 const Sugar = require('sugar');
@@ -238,24 +240,18 @@ module.exports = function(){
 
     // setup context options for initial load from pass context or path to context file
     if (arguments.length >= 1 && typeof arguments[0] === 'string') {
-        let path = arguments[0];
-        let regr = /(^\/)+/ig;
+        let _path = path.resolve(arguments[0]);
 
-        if (arguments[0].includes('../') && arguments[0].includes('./')) {
-            path = __dirname + '/' + arguments[0].replace('../','')
-        } else if (regr.test(arguments[0])) {
-            path = __dirname + '/' + arguments[0].substring(1, arguments[0].length);
-        }
+        console.log(path.resolve(arguments[0]));
 
         if (!arguments[0].match('.json')) {
-            path = path + '.json';
+            _path = _path + '.json';
         }
 
-        jsonfile.readFile(path, function(err, obj) {
+        jsonfile.readFile(_path, function(err, obj) {
             loadOption(obj);
         });
-    }
-    else if (options) {
+    } else if (options) {
        loadOption(options)
     }
 

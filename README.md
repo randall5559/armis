@@ -28,11 +28,11 @@ other systems/protocols (REST, GraphQL, Firebase, LocalStorage, IoT, IFTTT, etc.
 
 ## Setup Armis
 
-1. [Install Node.js](https://nodejs.org/en/download/)
+1. [Install Node.js](https://nodejs.org/en/download/) or [Install Yarn](https://yarnpkg.com/lang/en/docs/install/)
 2. Download and extract
-3. Add ```"armis": github:randall5559/armis``` to your ```package.json``` file dependencies section
-4. Run ```npm install armis```
-7. Run `npm start` to start the app
+3. Add ```"armis": "github:randall5559/armis"``` to your ```package.json``` file dependencies section
+4. Run ```npm install armis``` or ```yarn add armis```
+7. Run `npm start` or ```yarn start``` to start the app
 
 
 ## Documentation for Armis module
@@ -40,13 +40,13 @@ other systems/protocols (REST, GraphQL, Firebase, LocalStorage, IoT, IFTTT, etc.
 #### Instantiate Armis with a context schema (used to refine your results)
 
 ```javascript
-// @param context_schema - Refine the return payload (recommendated for better mapping to DB)
+// @param context_schema - Refine the return payload (recommended for better mapping to DB)
 // context_schema can be an javascript array of contextes passed as a parameter or
-// a absolute path from the root app directory to an json file containing an array of contextes
+// a absolute path from the root app directory to an json file containing an array of contextes.
 
 // @param return_format[optional] - The option of returning all, just the data with values or
 // values with part-of-speech ( 'values' | 'values-and-pos' | 'all' )
-// 'values' is set by default
+// 'values' is set by default.
 
 // @param context_time[optional] - Set the time for Armis to persist a context in seconds.
 // by default Armis will maintain a context for 10 seconds before reseting state back to start.
