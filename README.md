@@ -40,13 +40,13 @@ other systems/protocols (REST, GraphQL, Firebase, LocalStorage, IoT, IFTTT, etc.
 #### Instantiate Armis with a context schema (used to refine your results)
 
 ```javascript
-// @param context_schema - Refine the return payload (recommendated for better mapping to DB)
+// @param context_schema - Refine the return payload (recommended for better mapping to DB)
 // context_schema can be an javascript array of contextes passed as a parameter or
-// a absolute path from the root app directory to an json file containing an array of contextes
+// a absolute path from the root app directory to an json file containing an array of contextes.
 
 // @param return_format[optional] - The option of returning all, just the data with values or
 // values with part-of-speech ( 'values' | 'values-and-pos' | 'all' )
-// 'values' is set by default
+// 'values' is set by default.
 
 // @param context_time[optional] - Set the time for Armis to persist a context in seconds.
 // by default Armis will maintain a context for 10 seconds before reseting state back to start.
