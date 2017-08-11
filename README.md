@@ -28,11 +28,19 @@ other systems/protocols (REST, GraphQL, Firebase, LocalStorage, IoT, IFTTT, etc.
 
 ## Setup Armis
 
-1. [Install Node.js](https://nodejs.org/en/download/) or [Install Yarn](https://yarnpkg.com/lang/en/docs/install/)
+#### the Yarn way (recommended)
+
+1. [Install Yarn](https://yarnpkg.com/lang/en/docs/install/)
 2. Download and extract
-3. Add ```"armis": "github:randall5559/armis"``` to your ```package.json``` file dependencies section
-4. Run ```npm install armis``` or ```yarn add armis```
-7. Run `npm start` or ```yarn start``` to start the app
+3. Run ```yarn add https://github.com/randall5559/armis.git```
+4. Run ```yarn start``` to start app
+
+#### the Node way
+
+1. [Install Node.js](https://nodejs.org/en/download/)
+2. Download and extract
+3. Run ```npm install https://github.com/randall5559/armis.git```
+4. Run `npm start` to start app
 
 
 ## Documentation for Armis module
