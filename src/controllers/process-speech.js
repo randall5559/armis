@@ -24,9 +24,9 @@ import compromise from 'compromise';
 import pos from 'pos';
 import stem from 'stem-porter';
 import dbpedia from 'dbpedia-spotlight';
-import natural from 'natural';
+// import natural from 'natural';
 import sentim from 'sentiment';
-//import synonyms from 'find-synonyms';
+// import synonyms from 'find-synonyms';
 
 //constants
 const SYSTEM_NAME = "armis";
@@ -987,7 +987,7 @@ export default class Language {
         // do combined verbs/actions to see if CRUD action exist
         Object.keys(actions).forEach(key => {
             let wordJoined = verbs.join('-');
-            let rootWord = natural.PorterStemmer.stem(wordJoined);
+            let rootWord = compromise(wordJoined).out('root');
 
             if (actions[key].includes(wordJoined)) {
                 crud.push(key);
@@ -1015,7 +1015,7 @@ export default class Language {
             crud = verbs
                 .reduce((acc, verb) => {
                     Object.keys(actions).forEach(key => {
-                        let rootWord = natural.PorterStemmer.stem(verb);
+                        let rootWord = compromise(verb).out('root');
 
                         if (actions[key].includes(verb)) {
                             acc.push(key);
@@ -1042,7 +1042,7 @@ export default class Language {
             crud = _obj.subject.split(' ')
                 .reduce((acc, sub) => {
                     Object.keys(actions).forEach(key => {
-                        let rootWord = natural.PorterStemmer.stem(sub);
+                        let rootWord = compromise(sub).out('root');
 
                         if (actions[key].includes(sub)) {
                             acc.push(key);
@@ -1753,12 +1753,12 @@ export default class Language {
      *
      * @memberOf Language
      */
-    getNGrams(str, n) {
-        let NGrams = natural.NGrams;
-        let nGramSpeech = NGrams.ngrams(str, n);
+    // getNGrams(str, n) {
+    //     let NGrams = natural.NGrams;
+    //     let nGramSpeech = NGrams.ngrams(str, n);
 
-        return nGramSpeech;
-    }
+    //     return nGramSpeech;
+    // }
 
 
     /**
