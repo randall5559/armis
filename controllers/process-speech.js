@@ -60,10 +60,6 @@ var _dbpediaSpotlight = require('dbpedia-spotlight');
 
 var _dbpediaSpotlight2 = _interopRequireDefault(_dbpediaSpotlight);
 
-var _natural = require('natural');
-
-var _natural2 = _interopRequireDefault(_natural);
-
 var _sentiment = require('sentiment');
 
 var _sentiment2 = _interopRequireDefault(_sentiment);
@@ -85,7 +81,9 @@ var Sugar = require('sugar');
 
 // nlp modules
 
-//import synonyms from 'find-synonyms';
+// import natural from 'natural';
+
+// import synonyms from 'find-synonyms';
 
 //constants
 var SYSTEM_NAME = "armis";
@@ -1007,7 +1005,7 @@ var Language = function () {
             // do combined verbs/actions to see if CRUD action exist
             Object.keys(_actions2.default).forEach(function (key) {
                 var wordJoined = verbs.join('-');
-                var rootWord = _natural2.default.PorterStemmer.stem(wordJoined);
+                var rootWord = (0, _compromise2.default)(wordJoined).out('root');
 
                 if (_actions2.default[key].includes(wordJoined)) {
                     crud.push(key);
@@ -1034,7 +1032,7 @@ var Language = function () {
             if (crud.length === 0) {
                 crud = verbs.reduce(function (acc, verb) {
                     Object.keys(_actions2.default).forEach(function (key) {
-                        var rootWord = _natural2.default.PorterStemmer.stem(verb);
+                        var rootWord = (0, _compromise2.default)(verb).out('root');
 
                         if (_actions2.default[key].includes(verb)) {
                             acc.push(key);
@@ -1059,7 +1057,7 @@ var Language = function () {
             if (crud.length === 0) {
                 crud = _obj.subject.split(' ').reduce(function (acc, sub) {
                     Object.keys(_actions2.default).forEach(function (key) {
-                        var rootWord = _natural2.default.PorterStemmer.stem(sub);
+                        var rootWord = (0, _compromise2.default)(sub).out('root');
 
                         if (_actions2.default[key].includes(sub)) {
                             acc.push(key);
@@ -1767,15 +1765,13 @@ var Language = function () {
         *
         * @memberOf Language
         */
+        // getNGrams(str, n) {
+        //     let NGrams = natural.NGrams;
+        //     let nGramSpeech = NGrams.ngrams(str, n);
 
-    }, {
-        key: 'getNGrams',
-        value: function getNGrams(str, n) {
-            var NGrams = _natural2.default.NGrams;
-            var nGramSpeech = NGrams.ngrams(str, n);
+        //     return nGramSpeech;
+        // }
 
-            return nGramSpeech;
-        }
 
         /**
          * Pull unique tokens from context, main_object, object property
