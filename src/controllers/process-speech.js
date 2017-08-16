@@ -1802,6 +1802,7 @@ export default class Language {
         let keepTimeFormat = false;
         let tense = null;
         let timePatterns = [
+            ["this week", null],
             ["now", null],
             ["today", null],
             ["yesterday", false],
@@ -1911,6 +1912,11 @@ export default class Language {
                                     tense = patterns[1];
                                 }
                             });
+                        }
+
+                        if (!acc && tokensToStr.includes(day)) {
+                            acc = day;
+                            tense = null;
                         }
                     });
 
