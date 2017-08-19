@@ -1,5 +1,7 @@
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _rxjs = require('rxjs');
 
 var _rxjs2 = _interopRequireDefault(_rxjs);
@@ -225,6 +227,30 @@ module.exports = function () {
         }
     };
 
+    /**
+     * Reads a json file
+     *
+     * @param {any} path
+     */
+    var readJSON = function readJSON(path) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path, true);
+        xhr.responseType = 'blob';
+        xhr.onload = function (e) {
+            if (this.status == 200) {
+                var file = new File([this.response], 'temp');
+                var fileReader = new FileReader();
+                fileReader.addEventListener('load', function () {
+                    //do stuff with fileReader.result
+                    console.log(fileReader.result);
+                    loadOption(fileReader.result);
+                });
+                fileReader.readAsText(file);
+            }
+        };
+        xhr.send();
+    };
+
     /****************************************************************
      * Run setup on Armis instantiation
      ****************************************************************/
@@ -239,9 +265,19 @@ module.exports = function () {
             _path = _path + '.json';
         }
 
-        jsonfile.readFile(_path, function (err, obj) {
-            loadOption(obj);
-        });
+        if (arguments[0][0].match('/')) {
+            _path = _path.substring(1, _path.length);
+        }
+
+        console.log(typeof XMLHttpRequest === 'undefined' ? 'undefined' : _typeof(XMLHttpRequest));
+
+        if (typeof XMLHttpRequest === 'undefined' || (typeof XMLHttpRequest === 'undefined' ? 'undefined' : _typeof(XMLHttpRequest)) === undefined) {
+            jsonfile.readFile(_path, function (err, obj) {
+                loadOption(obj);
+            });
+        } else {
+            readJSON(_path);
+        }
     } else if (options) {
         loadOption(options);
     }
