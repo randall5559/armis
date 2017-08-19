@@ -233,6 +233,29 @@ module.exports = function(){
     }
 
 
+    /**
+     * Reads a json file with xmlHttpRequest() method if Armis is installed on client-side
+     *
+     * @param {any} path
+     */
+    var readJSON = (path) => {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path, true);
+        xhr.responseType = 'blob';
+        xhr.onload = function(e) {
+        if (this.status == 200) {
+            var file = new File([this.response], 'temp');
+            var fileReader = new FileReader();
+            fileReader.addEventListener('load', function(){
+                loadOption(JSON.parse(fileReader.result));
+            });
+            fileReader.readAsText(file);
+        }
+        }
+        xhr.send();
+    }
+
+
     /****************************************************************
      * Run setup on Armis instantiation
      ****************************************************************/
@@ -241,15 +264,21 @@ module.exports = function(){
     if (arguments.length >= 1 && typeof arguments[0] === 'string') {
         let _path = path.resolve(arguments[0]);
 
-        console.log(path.resolve(arguments[0]));
-
         if (!arguments[0].match('.json')) {
             _path = _path + '.json';
         }
 
-        jsonfile.readFile(_path, function(err, obj) {
-            loadOption(obj);
-        });
+        if (arguments[0][0].match('/')) {
+            _path = _path.substring(1, _path.length);
+        }
+
+        if (typeof(XMLHttpRequest) === 'undefined' || typeof(XMLHttpRequest) === undefined) {
+            jsonfile.readFile(_path, function(err, obj) {
+                loadOption(obj);
+            });
+        } else {
+            readJSON(_path);
+        }
     } else if (options) {
        loadOption(options)
     }
