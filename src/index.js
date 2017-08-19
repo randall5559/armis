@@ -234,7 +234,7 @@ module.exports = function(){
 
 
     /**
-     * Reads a json file
+     * Reads a json file with xmlHttpRequest() method if Armis is installed on client-side
      *
      * @param {any} path
      */
@@ -247,9 +247,8 @@ module.exports = function(){
             var file = new File([this.response], 'temp');
             var fileReader = new FileReader();
             fileReader.addEventListener('load', function(){
-                //do stuff with fileReader.result
                 console.log(fileReader.result);
-                loadOption(fileReader.result);
+                loadOption(JSON.parse(fileReader.result));
             });
             fileReader.readAsText(file);
         }
@@ -266,8 +265,6 @@ module.exports = function(){
     if (arguments.length >= 1 && typeof arguments[0] === 'string') {
         let _path = path.resolve(arguments[0]);
 
-        console.log(path.resolve(arguments[0]));
-
         if (!arguments[0].match('.json')) {
             _path = _path + '.json';
         }
@@ -275,8 +272,6 @@ module.exports = function(){
         if (arguments[0][0].match('/')) {
             _path = _path.substring(1, _path.length);
         }
-
-        console.log(typeof(XMLHttpRequest));
 
         if (typeof(XMLHttpRequest) === 'undefined' || typeof(XMLHttpRequest) === undefined) {
             jsonfile.readFile(_path, function(err, obj) {
