@@ -241,7 +241,6 @@ module.exports = function () {
                 var file = new File([this.response], 'temp');
                 var fileReader = new FileReader();
                 fileReader.addEventListener('load', function () {
-                    console.log(fileReader.result);
                     loadOption(JSON.parse(fileReader.result));
                 });
                 fileReader.readAsText(file);
