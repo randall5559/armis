@@ -119,6 +119,9 @@ var Language = function () {
         // context holder for objects with callback methods
         this.contextFuncs = [];
 
+        // armis default properties
+        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'people'];
+
         // extend armis memory params (currently: email, phone, link, date, time, file, directory, number)
         this.extends = [];
 
@@ -337,7 +340,7 @@ var Language = function () {
                         try {
                             _cont.tags.forEach(function (_tag) {
                                 if (obj.tags.includes(_tag)) {
-                                    throw new Error('can\'t have tag \'' + _tag + '\' in main and sub context schema!');
+                                    throw new Error('Armis Error: can\'t have tag \'' + _tag + '\' in main and sub context schema!');
                                 }
                             });
 
@@ -347,7 +350,7 @@ var Language = function () {
                             if (e) {
                                 console.log(e);
                             } else {
-                                new Error('couldn\'t add sub context tags');
+                                new Error('Armis Error: couldn\'t add sub context tags');
                             }
                         }
                     });
@@ -490,7 +493,7 @@ var Language = function () {
             // comment out these tags for now as starting tags are needed
             var patterns = ["MD", "VB", "VBG", "VBD", "VBN", "VBP", "VBZ" /*"RBR","RBS","RP","RB"*/];
             var separateWords = ['and', 'but', 'however', 'otherwise', 'plus'];
-            var joiningWords = ['because', 'unless', 'then', 'until', 'if', 'when'];
+            var joiningWords = ['because', 'unless', 'then', 'until', 'if'];
             var countToBreakContext = 0;
             var lockContext = false;
             var lockAction = false;
@@ -557,13 +560,16 @@ var Language = function () {
                         if (contObj.context === null && contObj.sub_context === null) {
                             if (index > 1 && _cont.tags.includes(_obj.tags[index - 2][0] + '-' + _obj.tags[index - 1][0] + '-' + token)) {
                                 trybreakIt();
-                                tryContextBreak(_cont.context, _obj.tags[index - 2][0] + ' ' + _obj.tags[index - 1][0] + ' ' + token);
+                                tryContextBreak(_cont.context, '');
+                                // tryContextBreak(_cont.context, `${_obj.tags[index-2][0]} ${_obj.tags[index-1][0]} ${token}`);
                             } else if (index > 0 && _cont.tags.includes(_obj.tags[index - 1][0] + '-' + token)) {
                                 trybreakIt();
-                                tryContextBreak(_cont.context, _obj.tags[index - 1][0] + ' ' + token);
+                                tryContextBreak(_cont.context, '');
+                                // tryContextBreak(_cont.context, `${_obj.tags[index-1][0]} ${token}`);
                             } else if (_cont.tags.includes(token)) {
                                 trybreakIt();
-                                tryContextBreak(_cont.context, token);
+                                tryContextBreak(_cont.context, '');
+                                // tryContextBreak(_cont.context, token);
                             }
                         }
                     }
@@ -1516,7 +1522,18 @@ var Language = function () {
                 memory = _self.formatMemory(memory, ['subject', 'action', 'object', 'interjection', 'tense', 'is_question', 'question_type', 'sentiment', 'sentiment_words']);
             }
 
-            return Object.assign({}, { context: contextValue, sub_context: subContextValue }, memory, { crud: crudValue });
+            // create mapping key
+            var mappingKey = Object.keys(memory).reduce(function (acc, key) {
+                if (Array.isArray(memory[key]) && memory[key].length > 0 && key !== 'tags') {
+                    acc.push(key);
+                }
+
+                return acc;
+            }, []).concat([subContextValue, contextValue]).filter(function (value) {
+                return value !== undefined && value !== null && value !== '';
+            }).reverse().join('_');
+
+            return Object.assign({}, { context: contextValue, sub_context: subContextValue }, memory, { crud: crudValue, mapping_key: mappingKey });
         }
 
         /**
@@ -1998,11 +2015,23 @@ var Language = function () {
                             if (_context.hasOwnProperty('properties') && _context.properties.length > 0) {
 
                                 _context.properties.forEach(function (property) {
-                                    if (!Object.keys(obj).includes(property.name) || Object.keys(obj).includes(property.name) && obj[property.name].length === 0) {
-                                        var _response = _self.generateResponseForMissingProperty(property);
+                                    var hasPropertyInExtends = false;
 
-                                        _self.properties.push(property.name);
-                                        _acc.push(_response);
+                                    _self.extends.forEach(function (extObj) {
+                                        if (extObj.name === property.name) {
+                                            hasPropertyInExtends = true;
+                                        }
+                                    });
+
+                                    if (hasPropertyInExtends) {
+                                        if (!Object.keys(obj).includes(property.name) || Object.keys(obj).includes(property.name) && obj[property.name].length === 0) {
+                                            var _response = _self.generateResponseForMissingProperty(property);
+
+                                            _self.properties.push(property.name);
+                                            _acc.push(_response);
+                                        }
+                                    } else {
+                                        throw new Error('Armis Error: Property \'' + property.name + '\' must have an extended method!');
                                     }
                                 });
                             }
@@ -2038,11 +2067,12 @@ var Language = function () {
     }, {
         key: 'generateResponseForMissingProperty',
         value: function generateResponseForMissingProperty(property) {
-
             if (property.hasOwnProperty('multi') && property.multi === true) {
                 return Sugar.String.format(_responses3.default[property.noun], property.name, 's', 'are');
-            } else {
+            } else if (property.hasOwnProperty('noun')) {
                 return Sugar.String.format(_responses3.default[property.noun], property.name, '', 'is');
+            } else {
+                throw new Error('\n             Armis Error: property object missing \'noun\' key\n             (Ex: { name: \'A Name\', noun: \'person\' | \'place\' | \'thing\'})\n            ');
             }
         }
     }]);
