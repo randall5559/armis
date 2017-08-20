@@ -1518,7 +1518,21 @@ export default class Language {
 
         // create mapping key
         let mappingKey = Object.keys(memory).reduce((acc, key) => {
-            if (Array.isArray(memory[key]) && memory[key].length > 0 && key !== 'tags') {
+            let contextMatch = false;
+
+            _self.contextes.forEach(obj => {
+                if (obj.context === memory.context && obj.hasOwnProperty('properties') ||
+                    obj.context === contextValue && obj.hasOwnProperty('properties')) {
+                    obj.properties.forEach(property => {
+                        if (property.name === key) {
+                            contextMatch = true;
+                        }
+                    });
+                }
+            });
+
+            if (Array.isArray(memory[key]) && memory[key].length > 0 &&
+                key !== 'tags' && contextMatch === true) {
                 acc.push(key);
             }
 
