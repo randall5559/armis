@@ -68,36 +68,121 @@ var armis = new Armis(
 
 #### Context schema example
 
+
+```javascript
+[
+    {
+        // Main context for matching
+        context: 'house',
+
+        // Tags to match to main context if found on a query string then the main context object is returned
+        tags: ['home', 'basement', 'backyard', 'kitchen', 'bathroom'],
+
+        // Sub context to match. If a sub context tag is found on query string then the main context object is returned
+        sub_context: [
+            {
+                context: 'garage',
+                tags: ['car','tools'] // Tags to match to sub context
+            }
+        ],
+
+        // If query string contains any of the provide tags this main context will not be returned
+        ignores: [ 'oven', 'refrigerator', 'fridge' ]
+
+        // An array of properties that must be found on the query string in order for a main context to be returned
+        // each property must also have an extend method associated with the name if it's not one of
+        // Armis core properties (date, time, phone, email, link, file, directory, number, people).
+        // See below extend method documentation.
+        properties: [
+            {
+                name: 'color', // name of the property
+                noun: 'thing', // the property as a noun (person, place or thing)
+                multi: true // allow multiple params (in this case multi colors)
+            }
+        ]
+    }
+]
+```
+
+
+#### Armis query results example
 ```javascript
 {
-    // Main context for matching
-    context: 'house',
+    // Status of the results [ completed, uncompleted ]
+    "status": "completed",
 
-    // Tags to match to main context if found on a query string then the main context object is returned
-    tags: ['home', 'basement', 'backyard', 'kitchen', 'bathroom'],
-
-    // Sub context to match. If a sub context tag is found on query string then the main context object is returned
-    sub_context: [
+    // The results with break downs
+    "results": [
         {
-            context: 'garage',
-            tags: ['car','tools'] // Tags to match to sub context
+            "context": "house",
+            "sub_context": "garage",
+            "crud": "read",
+            "state": null,
+            "tags": [
+                "door"
+            ],
+
+            // Core properties
+            "date": [],
+            "time": [],
+            "people": [],
+            "places": [],
+            "phone": [],
+            "email": [],
+            "link": [],
+            "file": [],
+            "directory": [],
+            "number": [],
+
+            // Part of Speech
+            "subject": "",
+            "action": "",
+            "object": "",
+            "interjection": [],
+            "tense": "present",
+            "is_question": false,
+            "question_type": "",
+            "sentiment": "neutral",
+            "sentiment_words": [],
+
+            // Mapping key
+            "mapping_key": "house_garage"
         }
     ],
 
-    // If query string contains any of the provide tags this main context with not be returned
-    ignores: [ 'oven', 'refrigerator', 'fridge' ]
+    // The 'run' is either 'join' | 'individual' | ''.
+    // A 'join' run is two or more matched contexts from the results that have a relationship
+    // Ex: 'Login out bob then cancel his account'. This query would be one after the other thus 'join'
+    // would be the value
+    // A individual is to separate contextes that could be run in parallel or not. They have no relationship
+    "run": "",
 
-    // An array of properties that must be found on the query string in order for a main context to be returned
-    // each property must also have an extend method associated with the name if it's not one of
-    // Armis core properties (date, time, phone, email, link, file, directory, number, people).
-    // See below extend method documentation.
-    properties: [
+    // The query that was sent to Armis
+    "speech": "is bob logged in",
+
+    // When the query was ran
+    "timestamp": 1503162521443
+}
+```
+
+#### Armis query results example with required properties not fulfilled
+
+```javascript
+{
+    "status": "uncomplete",
+    "results": [
         {
-            name: 'color', // name of the property
-            noun: 'thing', // the property as a noun (person, place or thing)
-            multi: true // allow multiple params (in this case multi colors)
+            "context": "user",
+            "sub_context": "",
+            "responses": [
+                "Who is the person",
+                "I don't understand"
+            ]
         }
-    ]
+    ],
+    "run": "individual",
+    "speech": "is logged in",
+    "timestamp": 1503163795198
 }
 ```
 
@@ -152,6 +237,7 @@ armis.context('house', (contextObj, raw) => {
 
 #### Extend armis core properties (date, time, phone, email, link, file, directory, number, people):
 
+
 ```javascript
 // must return an array
 armis.extend('color', (tokens) => {
@@ -193,3 +279,84 @@ armis.on('error', (error, passParam) => {
 ```javascript
 armis.destroy();
 ```
+
+
+## Armis N Play Example
+
+#### Who's logged in example with a required property
+````javascript
+// Example context. Must have a property of name with value(s) in order to make a context match
+[
+    {
+        context: 'user',
+        sub_context: {
+            context: 'login',
+            tags: ['logged']
+        }
+        properties: [
+            {
+                name: 'people',
+            }
+        ]
+    }
+]
+
+// The query called
+armis.guess('Is Bob logged in?', '');
+
+// The json response
+{
+    "status": "completed",
+    "results": [
+        {
+            "context": "user",
+            "sub_context": "login",
+            "crud": "read",
+            "state": null,
+            "tags": [
+                "bob"
+            ],
+            "people": [
+                "bob"
+            ],
+            "mapping_key": "user_login_people"
+        }
+    ],
+    "run": "",
+    "speech": "is bob logged in",
+    "timestamp": 1503162521443
+}
+
+````
+
+
+
+#### Many Contextes Example
+##### Note: Armis Contextes is a first in first serve concept. Meaning when setting your context make sure the more fine tune context is higher up with multiple contextes of the same name
+
+````javascript
+[
+    {
+        context: 'user',
+        sub_context: {
+            context: 'login',
+            tags: ['logged']
+        }
+        properties: [
+            {
+                name: 'people',
+            }
+        ]
+    },
+    {
+        context: 'user',
+        sub_context: {
+            context: 'created',
+            tags: ['made', 'started', 'added']
+        }
+    },
+    {
+        context: 'user'
+    }
+]
+````

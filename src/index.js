@@ -73,18 +73,18 @@ module.exports = function(){
                 if (!obj.hasOwnProperty('tags')) {
                     _obj = Object.assign({}, obj, { tags: [] });
                 } else if (obj.hasOwnProperty('tags') && !Array.isArray(obj.tags)) {
-                    throw new Error('tags must be a array of strings');
+                    throw new Error('Armis Error: tags must be a array of strings');
                 }
 
                 lang.setContext(_obj);
             } else {
-                throw new Error('context object not correct');
+                throw new Error('Armis Error: context object not correct');
             }
 
             // handle sub context property
             if (obj && obj.hasOwnProperty('sub_context')) {
                 if (!Array.isArray(obj.sub_context)) {
-                    throw new Error('sub context must be a array of objects');
+                    throw new Error('Armis Error: sub context must be a array of objects');
                 }
             }
         } catch (e) {
@@ -120,7 +120,7 @@ module.exports = function(){
                     func: func
                 });
             } else {
-                throw new Error('context missing params');
+                throw new Error('Armis Error: context missing params');
             }
         } catch (e) {
             console.log(e);
@@ -220,12 +220,12 @@ module.exports = function(){
                         this.addContext(obj);
                     } else {
                         if (!obj.hasOwnProperty('context')) {
-                            throw new Error('context key missing');
+                            throw new Error('Armis Error: context key missing');
                         }
                     }
                 });
             } else {
-                throw new Error('options param must be an array of contextes.');
+                throw new Error('Armis Error: options param must be an array of contextes.');
             }
         } catch (e) {
             console.log(e); // pass exception object to err handler
