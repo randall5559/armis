@@ -61,6 +61,9 @@ export default class Language {
         // context holder for objects with callback methods
         this.contextFuncs = [];
 
+        // armis default properties
+        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'people'];
+
         // extend armis memory params (currently: email, phone, link, date, time, file, directory, number)
         this.extends = [];
 
@@ -284,7 +287,7 @@ export default class Language {
                         try {
                             _cont.tags.forEach(_tag => {
                                 if (obj.tags.includes(_tag)) {
-                                    throw new Error(`can\'t have tag '${_tag}' in main and sub context schema!`)
+                                    throw new Error(`Armis Error: can\'t have tag '${_tag}' in main and sub context schema!`);
                                 }
                             });
 
@@ -294,7 +297,7 @@ export default class Language {
                             if (e) {
                                 console.log(e);
                             } else {
-                                new Error('couldn\'t add sub context tags');
+                                new Error('Armis Error: couldn\'t add sub context tags');
                             }
                         }
 
@@ -447,7 +450,7 @@ export default class Language {
         // comment out these tags for now as starting tags are needed
         let patterns = ["MD","VB","VBG","VBD","VBN","VBP","VBZ" /*"RBR","RBS","RP","RB"*/];
         let separateWords = ['and', 'but', 'however', 'otherwise', 'plus'];
-        let joiningWords = ['because', 'unless', 'then', 'until', 'if', 'when'];
+        let joiningWords = ['because', 'unless', 'then', 'until', 'if'];
         let countToBreakContext = 0;
         let lockContext = false;
         let lockAction = false;
@@ -517,17 +520,21 @@ export default class Language {
                         if (contObj.context === null && contObj.sub_context === null) {
                             if (index > 1 && _cont.tags.includes(`${_obj.tags[index-2][0]}-${_obj.tags[index-1][0]}-${token}`)) {
                                 trybreakIt();
-                                tryContextBreak(_cont.context, `${_obj.tags[index-2][0]} ${_obj.tags[index-1][0]} ${token}`);
+                                tryContextBreak(_cont.context, '');
+                                // tryContextBreak(_cont.context, `${_obj.tags[index-2][0]} ${_obj.tags[index-1][0]} ${token}`);
                             } else if (index > 0 && _cont.tags.includes(`${_obj.tags[index-1][0]}-${token}`)) {
                                 trybreakIt();
-                                tryContextBreak(_cont.context, `${_obj.tags[index-1][0]} ${token}`);
+                                tryContextBreak(_cont.context, '');
+                                // tryContextBreak(_cont.context, `${_obj.tags[index-1][0]} ${token}`);
                             } else if (_cont.tags.includes(token)) {
                                 trybreakIt();
-                                tryContextBreak(_cont.context, token);
+                                tryContextBreak(_cont.context, '');
+                                // tryContextBreak(_cont.context, token);
                             }
                         }
                     }
                 });
+
 
                 if (!lockAction && patterns.includes(pos)) {
                     trybreakIt();
@@ -860,7 +867,7 @@ export default class Language {
         let contextObj = (context) ? { context: context} : {};
 
         return Object.assign({}, _obj, contextObj, {
-            people: people,
+            person: people,
             places: places,
             phones: phones,
             links: links,
@@ -1509,8 +1516,21 @@ export default class Language {
                 'is_question', 'question_type', 'sentiment', 'sentiment_words']);
         }
 
+        // create mapping key
+        let mappingKey = Object.keys(memory).reduce((acc, key) => {
+            if (Array.isArray(memory[key]) && memory[key].length > 0 && key !== 'tags') {
+                acc.push(key);
+            }
+
+            return acc;
+        }, [])
+        .concat([subContextValue, contextValue])
+        .filter((value) => value !== undefined && value !== null && value !== '')
+        .reverse()
+        .join('_');
+
         return Object.assign({}, { context: contextValue, sub_context: subContextValue },
-            memory, { crud: crudValue });
+            memory, { crud: crudValue, mapping_key: mappingKey });
     }
 
 
@@ -2042,12 +2062,24 @@ export default class Language {
                         if (_context.hasOwnProperty('properties') && _context.properties.length > 0) {
 
                             _context.properties.forEach(property => {
-                                if (!Object.keys(obj).includes(property.name) ||
-                                    Object.keys(obj).includes(property.name) && obj[property.name].length === 0) {
-                                    let _response = _self.generateResponseForMissingProperty(property);
+                                let hasPropertyInExtends = false;
 
-                                    _self.properties.push(property.name);
-                                    _acc.push(_response);
+                                _self.extends.forEach((extObj) => {
+                                    if (extObj.name === property.name) {
+                                        hasPropertyInExtends = true;
+                                    }
+                                })
+
+                                if (hasPropertyInExtends) {
+                                    if (!Object.keys(obj).includes(property.name) ||
+                                        Object.keys(obj).includes(property.name) && obj[property.name].length === 0) {
+                                        let _response = _self.generateResponseForMissingProperty(property);
+
+                                        _self.properties.push(property.name);
+                                        _acc.push(_response);
+                                    }
+                                } else {
+                                    throw new Error(`Armis Error: Property '${property.name}' must have an extended method!`);
                                 }
                             });
                         }
@@ -2081,11 +2113,15 @@ export default class Language {
      * @memberof Language
      */
     generateResponseForMissingProperty(property) {
-
-        if (property.hasOwnProperty('multi') && property.multi === true) {
+        if (property.hasOwnProperty('noun') && property.hasOwnProperty('multi') && property.multi === true) {
             return Sugar.String.format(responses[property.noun], property.name, 's', 'are');
-        } else {
+        } else if (property.hasOwnProperty('noun')) {
             return Sugar.String.format(responses[property.noun], property.name, '', 'is');
+        } else {
+            throw new Error(`
+             Armis Error: property object missing 'noun' key
+             (Ex: { name: 'A Name', noun: 'person' | 'place' | 'thing'})
+            `);
         }
     }
 }
