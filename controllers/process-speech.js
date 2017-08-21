@@ -883,7 +883,7 @@ var Language = function () {
             var contextObj = context ? { context: context } : {};
 
             return Object.assign({}, _obj, contextObj, {
-                people: people,
+                person: people,
                 places: places,
                 phones: phones,
                 links: links,
@@ -1522,9 +1522,29 @@ var Language = function () {
                 memory = _self.formatMemory(memory, ['subject', 'action', 'object', 'interjection', 'tense', 'is_question', 'question_type', 'sentiment', 'sentiment_words']);
             }
 
+<<<<<<< HEAD
             // create mapping key
             var mappingKey = Object.keys(memory).reduce(function (acc, key) {
                 if (Array.isArray(memory[key]) && memory[key].length > 0 && key !== 'tags') {
+=======
+            console.log(_self.contextes);
+            // create mapping key
+            var mappingKey = Object.keys(memory).reduce(function (acc, key) {
+                var contextMatch = false;
+
+                _self.contextes.forEach(function (obj) {
+                    if (obj.context === memory.context && obj.hasOwnProperty('properties') || obj.context === contextValue && obj.hasOwnProperty('properties')) {
+                        obj.properties.forEach(function (property) {
+                            if (property.name === key) {
+                                contextMatch = true;
+                                console.log(key);
+                            }
+                        });
+                    }
+                });
+
+                if (Array.isArray(memory[key]) && memory[key].length > 0 && key !== 'tags' && contextMatch === true) {
+>>>>>>> develop
                     acc.push(key);
                 }
 
@@ -2067,7 +2087,11 @@ var Language = function () {
     }, {
         key: 'generateResponseForMissingProperty',
         value: function generateResponseForMissingProperty(property) {
+<<<<<<< HEAD
             if (property.hasOwnProperty('multi') && property.multi === true) {
+=======
+            if (property.hasOwnProperty('noun') && property.hasOwnProperty('multi') && property.multi === true) {
+>>>>>>> develop
                 return Sugar.String.format(_responses3.default[property.noun], property.name, 's', 'are');
             } else if (property.hasOwnProperty('noun')) {
                 return Sugar.String.format(_responses3.default[property.noun], property.name, '', 'is');

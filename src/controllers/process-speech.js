@@ -1518,7 +1518,25 @@ export default class Language {
 
         // create mapping key
         let mappingKey = Object.keys(memory).reduce((acc, key) => {
+<<<<<<< HEAD
             if (Array.isArray(memory[key]) && memory[key].length > 0 && key !== 'tags') {
+=======
+            let contextMatch = false;
+
+            _self.contextes.forEach(obj => {
+                if (obj.context === memory.context && obj.hasOwnProperty('properties') ||
+                    obj.context === contextValue && obj.hasOwnProperty('properties')) {
+                    obj.properties.forEach(property => {
+                        if (property.name === key) {
+                            contextMatch = true;
+                        }
+                    });
+                }
+            });
+
+            if (Array.isArray(memory[key]) && memory[key].length > 0 &&
+                key !== 'tags' && contextMatch === true) {
+>>>>>>> develop
                 acc.push(key);
             }
 
@@ -2069,12 +2087,21 @@ export default class Language {
                                         hasPropertyInExtends = true;
                                     }
                                 })
+<<<<<<< HEAD
 
                                 if (hasPropertyInExtends) {
                                     if (!Object.keys(obj).includes(property.name) ||
                                         Object.keys(obj).includes(property.name) && obj[property.name].length === 0) {
                                         let _response = _self.generateResponseForMissingProperty(property);
 
+=======
+
+                                if (hasPropertyInExtends) {
+                                    if (!Object.keys(obj).includes(property.name) ||
+                                        Object.keys(obj).includes(property.name) && obj[property.name].length === 0) {
+                                        let _response = _self.generateResponseForMissingProperty(property);
+
+>>>>>>> develop
                                         _self.properties.push(property.name);
                                         _acc.push(_response);
                                     }
