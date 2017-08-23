@@ -120,7 +120,7 @@ var Language = function () {
         this.contextFuncs = [];
 
         // armis default properties
-        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'people'];
+        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'person'];
 
         // extend armis memory params (currently: email, phone, link, date, time, file, directory, number)
         this.extends = [];
@@ -543,11 +543,21 @@ var Language = function () {
                 };
 
                 _self.contextes.forEach(function (_cont) {
-                    var shouldIgnore = _cont.hasOwnProperty('ignores') ? _tokens.filter(function (token) {
-                        return _cont.ignores.includes(token);
+                    var shouldIgnore = _cont.hasOwnProperty('ignores') ? _cont.ignores.filter(function (ignore) {
+                        return _tokens.join('-').includes(ignore.toLowerCase());
                     }).length > 0 : false;
 
-                    if (!shouldIgnore) {
+                    var shouldRequire = false;
+
+                    if (_cont.hasOwnProperty('requires')) {
+                        shouldRequire = _cont.requires.filter(function (require) {
+                            return _tokens.join('-').includes(require.toLowerCase());
+                        }).length > 0;
+                    } else if (!_cont.hasOwnProperty('requires')) {
+                        shouldRequire = true;
+                    }
+
+                    if (!shouldIgnore && shouldRequire) {
                         if (_cont.hasOwnProperty('sub_context')) {
                             _cont.sub_context.forEach(function (_sub_cont) {
                                 if (index > 1 && _sub_cont.tags.includes(_obj.tags[index - 2][0] + '-' + _obj.tags[index - 1][0] + '-' + token) || index > 0 && _sub_cont.tags.includes(_obj.tags[index - 1][0] + '-' + token) || _sub_cont.tags.includes(token)) {
@@ -778,8 +788,8 @@ var Language = function () {
             var knwlInstance = new _knwl2.default('english');
             knwlInstance.init(str);
 
-            // people
-            var people = (0, _compromise2.default)(str).people().normalize().sort('frequency').unique().out('array');
+            // person
+            var person = (0, _compromise2.default)(str).people().normalize().sort('frequency').unique().out('array');
 
             // places
             var places = (0, _compromise2.default)(str).places().sort('alpha').out('array');
@@ -883,7 +893,7 @@ var Language = function () {
             var contextObj = context ? { context: context } : {};
 
             return Object.assign({}, _obj, contextObj, {
-                person: people,
+                person: person,
                 places: places,
                 phones: phones,
                 links: links,
@@ -1543,7 +1553,7 @@ var Language = function () {
                 return acc;
             }, []).concat([subContextValue, contextValue]).filter(function (value) {
                 return value !== undefined && value !== null && value !== '';
-            }).reverse().join('_');
+            }).reverse().join('_').toLowerCase();
 
             return Object.assign({}, { context: contextValue, sub_context: subContextValue }, memory, { crud: crudValue, mapping_key: mappingKey });
         }
@@ -1732,7 +1742,7 @@ var Language = function () {
                 main_object: dbPediaObj.main_object,
                 date: obj.dates,
                 time: obj.times,
-                people: obj.people,
+                person: obj.person,
                 places: obj.places,
                 phone: obj.phones,
                 email: obj.emails,
@@ -2030,7 +2040,7 @@ var Language = function () {
                                     var hasPropertyInExtends = false;
 
                                     _self.extends.forEach(function (extObj) {
-                                        if (extObj.name === property.name) {
+                                        if (extObj.name === property.name || _self.baseProperties.includes(property.name)) {
                                             hasPropertyInExtends = true;
                                         }
                                     });
