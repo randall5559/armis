@@ -62,7 +62,7 @@ export default class Language {
         this.contextFuncs = [];
 
         // armis default properties
-        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'people'];
+        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'person'];
 
         // extend armis memory params (currently: email, phone, link, date, time, file, directory, number)
         this.extends = [];
@@ -502,10 +502,18 @@ export default class Language {
 
                 _self.contextes.forEach(_cont => {
                     let shouldIgnore = (_cont.hasOwnProperty('ignores')) ?
-                        _tokens.filter(token => _cont.ignores.includes(token)).length > 0 :
+                        _cont.ignores.filter(ignore => _tokens.join('-').includes(ignore.toLowerCase())).length > 0 :
                         false;
 
-                    if (!shouldIgnore) {
+                    let shouldRequire = false;
+
+                    if (_cont.hasOwnProperty('requires')) {
+                        shouldRequire = _cont.requires.filter(require => _tokens.join('-').includes(require.toLowerCase())).length > 0;
+                    } else if (!_cont.hasOwnProperty('requires')) {
+                        shouldRequire = true;
+                    }
+
+                    if (!shouldIgnore && shouldRequire) {
                         if(_cont.hasOwnProperty('sub_context')) {
                             _cont.sub_context.forEach(_sub_cont => {
                                 if (index > 1 && _sub_cont.tags.includes(`${_obj.tags[index-2][0]}-${_obj.tags[index-1][0]}-${token}`) ||
@@ -1725,7 +1733,7 @@ export default class Language {
             main_object : dbPediaObj.main_object,
             date: obj.dates,
             time: obj.times,
-            people: obj.people,
+            person: obj.people,
             places: obj.places,
             phone : obj.phones,
             email : obj.emails,

@@ -120,7 +120,7 @@ var Language = function () {
         this.contextFuncs = [];
 
         // armis default properties
-        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'people'];
+        this.baseProperties = ['date', 'time', 'phone', 'email', 'link', 'file', 'directory', 'number', 'person'];
 
         // extend armis memory params (currently: email, phone, link, date, time, file, directory, number)
         this.extends = [];
@@ -543,11 +543,21 @@ var Language = function () {
                 };
 
                 _self.contextes.forEach(function (_cont) {
-                    var shouldIgnore = _cont.hasOwnProperty('ignores') ? _tokens.filter(function (token) {
-                        return _cont.ignores.includes(token);
+                    var shouldIgnore = _cont.hasOwnProperty('ignores') ? _cont.ignores.filter(function (ignore) {
+                        return _tokens.join('-').includes(ignore.toLowerCase());
                     }).length > 0 : false;
 
-                    if (!shouldIgnore) {
+                    var shouldRequire = false;
+
+                    if (_cont.hasOwnProperty('requires')) {
+                        shouldRequire = _cont.requires.filter(function (require) {
+                            return _tokens.join('-').includes(require.toLowerCase());
+                        }).length > 0;
+                    } else if (!_cont.hasOwnProperty('requires')) {
+                        shouldRequire = true;
+                    }
+
+                    if (!shouldIgnore && shouldRequire) {
                         if (_cont.hasOwnProperty('sub_context')) {
                             _cont.sub_context.forEach(function (_sub_cont) {
                                 if (index > 1 && _sub_cont.tags.includes(_obj.tags[index - 2][0] + '-' + _obj.tags[index - 1][0] + '-' + token) || index > 0 && _sub_cont.tags.includes(_obj.tags[index - 1][0] + '-' + token) || _sub_cont.tags.includes(token)) {
@@ -1734,7 +1744,7 @@ var Language = function () {
                 main_object: dbPediaObj.main_object,
                 date: obj.dates,
                 time: obj.times,
-                people: obj.people,
+                person: obj.people,
                 places: obj.places,
                 phone: obj.phones,
                 email: obj.emails,
