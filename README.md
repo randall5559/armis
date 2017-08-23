@@ -86,12 +86,17 @@ var armis = new Armis(
             }
         ],
 
-        // If query string contains any of the provide tags this main context will not be returned
+        // If query string contains any of the provide tags this main context will not be returned.
+        // Even if provided tags for main context and sub context have matches it will still be ignored
         ignores: [ 'oven', 'refrigerator', 'fridge' ]
+
+        // If query string contains any of the provide tags plus a main context tag or sub context tag
+        // this context will be returned.
+        requires: ['door']
 
         // An array of properties that must be found on the query string in order for a main context to be returned
         // each property must also have an extend method associated with the name if it's not one of
-        // Armis core properties (date, time, phone, email, link, file, directory, number, people).
+        // Armis core properties (date, time, phone, email, link, file, directory, number, person).
         // See below extend method documentation.
         properties: [
             {
@@ -122,10 +127,10 @@ var armis = new Armis(
                 "door"
             ],
 
-            // Core properties
+            // Core properties (remember you can extend these with extend())
             "date": [],
             "time": [],
-            "people": [],
+            "person": [],
             "places": [],
             "phone": [],
             "email": [],
@@ -289,13 +294,13 @@ armis.destroy();
 [
     {
         context: 'user',
-        sub_context: {
+        sub_context: [{
             context: 'login',
             tags: ['logged']
-        }
+        }],
         properties: [
             {
-                name: 'people',
+                name: 'person',
             }
         ]
     }
@@ -316,7 +321,7 @@ armis.guess('Is Bob logged in?', '');
             "tags": [
                 "bob"
             ],
-            "people": [
+            "person": [
                 "bob"
             ],
             "mapping_key": "user_login_people"
@@ -326,9 +331,91 @@ armis.guess('Is Bob logged in?', '');
     "speech": "is bob logged in",
     "timestamp": 1503162521443
 }
-
 ````
 
+
+#### Who's logged in/out example with a requires key
+````javascript
+// Example context. The below context says that the query string must contain the token 'now'
+// in order to continue processing the query. This becomes important when dealing with multiple contexts using
+// the same context main tag. Look at below example.
+[
+     {
+        context: 'user',
+        sub_context: [{
+            context: 'loggedOut',
+            tags: ['logged']
+        }],
+        properties: [
+            {
+                name: 'person',
+            }
+        ]
+        requires: ['out']
+    },
+    {
+        context: 'user',
+        sub_context: [{
+            context: 'loggedIn',
+            tags: ['logged']
+        }],
+        properties: [
+            {
+                name: 'person',
+            }
+        ],
+        requires: ['in']
+    }
+]
+
+// You could also do
+
+[
+     {
+        context: 'user',
+        sub_context: [{
+            context: 'loggedIn',
+            tags: ['in']
+        },
+        {
+            context: 'loggedOut',
+            tags: ['out']
+        }],
+        properties: [
+            {
+                name: 'person',
+            }
+        ]
+        requires: ['logged']
+    }
+]
+
+// The query called
+armis.guess('Is Bob logged in now?', '');
+
+// The json response
+{
+    "status": "completed",
+    "results": [
+        {
+            "context": "user",
+            "sub_context": "loggedIn",
+            "crud": "read",
+            "state": null,
+            "tags": [
+                "bob"
+            ],
+            "person": [
+                "bob"
+            ],
+            "mapping_key": "user_loggedin_person"
+        }
+    ],
+    "run": "",
+    "speech": "is bob logged in",
+    "timestamp": 1503162521443
+}
+````
 
 
 #### Many Contextes Example
@@ -338,10 +425,10 @@ armis.guess('Is Bob logged in?', '');
 [
     {
         context: 'user',
-        sub_context: {
+        sub_context: [{
             context: 'login',
             tags: ['logged']
-        }
+        }],
         properties: [
             {
                 name: 'people',
@@ -350,10 +437,10 @@ armis.guess('Is Bob logged in?', '');
     },
     {
         context: 'user',
-        sub_context: {
+        sub_context: [{
             context: 'created',
             tags: ['made', 'started', 'added']
-        }
+        }]
     },
     {
         context: 'user'
