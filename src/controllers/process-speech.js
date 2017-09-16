@@ -46,11 +46,14 @@ export default class Language {
         // main context persist the context across guesses
         this.mainContext = '';
 
+        // sub context persist the context across guesses
+        this.subMainContext = '';
+
         // main crud persist the crud across guesses
         this.mainCrud = '';
 
         // the time Armis will persist context in milliseconds
-        this.contextTime = 10000;
+        this.contextTime = 20000;
 
         // clear the current context after the contextTime runs out
         this.clearMainContext = null;
@@ -291,7 +294,7 @@ export default class Language {
                                 }
                             });
 
-                            obj.tags.push(_cont.context);
+                            // obj.tags.push(_cont.context);
                             _cont.tags.push(_cont.context);
                         } catch(e) {
                             if (e) {
@@ -335,6 +338,7 @@ export default class Language {
      */
     clearContext() {
         this.mainContext = '';
+        this.subMainContext = '';
         this.mainCrud = '';
         this.resetGuesses(this);
     }
@@ -451,113 +455,66 @@ export default class Language {
         let patterns = ["MD","VB","VBG","VBD","VBN","VBP","VBZ" /*"RBR","RBS","RP","RB"*/];
         let separateWords = ['and', 'but', 'however', 'otherwise', 'plus'];
         let joiningWords = ['because', 'unless', 'then', 'until', 'if'];
-        let countToBreakContext = 0;
-        let lockContext = false;
-        let lockAction = false;
-        let contObj = {
-            context: null,
-            sub_context: null,
-            tokens: []
+
+        let tryToMatchContext = (acc, token, index) => {
+            _self.contextes.forEach(_cont => {
+                let shouldIgnore = (_cont.hasOwnProperty('ignores')) ?
+                    _cont.ignores.filter(ignore => _tokens.join('-').includes(ignore.toLowerCase())).length > 0 :
+                    false;
+
+                let shouldRequire = false;
+
+                if (_cont.hasOwnProperty('requires')) {
+                    shouldRequire = _cont.requires.filter(require => _tokens.join('-').includes(require.toLowerCase())).length > 0;
+                } else if (!_cont.hasOwnProperty('requires')) {
+                    shouldRequire = true;
+                }
+
+                if (!shouldIgnore && shouldRequire) {
+                    if (index > 1 && _cont.tags.includes(`${_obj.tags[index-2][0]}-${_obj.tags[index-1][0]}-${token}`) ||
+                        index > 0 && _cont.tags.includes(`${_obj.tags[index-1][0]}-${token}`) ||
+                        _cont.tags.includes(token)) {
+                            acc.push({
+                                context: _cont.context,
+                                sub_context: '',
+                                tokens: _tokens
+                            });
+                    }
+
+                    if (_cont.hasOwnProperty('sub_context')) {
+                        _cont.sub_context.forEach(_sub_cont => {
+                            if (index > 1 && _sub_cont.tags.includes(`${_obj.tags[index-2][0]}-${_obj.tags[index-1][0]}-${token}`) ||
+                                index > 0 && _sub_cont.tags.includes(`${_obj.tags[index-1][0]}-${token}`) ||
+                                _sub_cont.tags.includes(token)) {
+                                    acc.push({
+                                        context: _cont.context,
+                                        sub_context: _sub_cont.context,
+                                        tokens: _tokens
+                                    });
+                            }
+                        });
+                    }
+                }
+            });
+
+            return acc;
         };
 
-        let clearContObj = () => {
-            countToBreakContext = 1;
-            lockContext = false;
-            lockAction = false;
-            contObj = {
-                context: null,
-                sub_context: null,
-                tokens: []
-            };
+        // see if joining or separate exist in tokens
+        let canBreakQuery = (__token__) => {
+            return _tokens.includes(__token__);
         };
 
-        let tryContextBreak = (_context_, _subContext_) => {
-            if (!lockContext) {
-                contObj.context = (!contObj.context) ? _context_ : contObj.context;
-                contObj.sub_context = (!contObj.sub_context) ? _subContext_ : contObj.sub_context;
-                lockContext = true;
-
-                return true;
-            } else if (_context_ !== contObj.context && _subContext_ !== contObj._sub_cont && lockAction) {
-                contObj.context = (!contObj.context) ? _context_ : contObj.context;
-                contObj.sub_context = (!contObj.sub_context) ? _subContext_ : contObj.sub_context;
-                lockContext = true;
-
-                return true;
-            }
+        if (joiningWords.some(canBreakQuery) || separateWords.some(canBreakQuery)) {
+            console.log('CAN SPLIT');
         }
 
         // break context up
         _self.guesses = _obj.tags
             .reduce((acc, tag, index) => {
                 let token = tag[0];
-                let pos = tag[1];
-                let trybreakIt = () => {
-                    countToBreakContext++;
-                    if (countToBreakContext === 3 && index < (_obj.tags.length-1)) {
-                        acc.push(contObj);
-                        clearContObj();
-                    }
-                }
 
-                _self.contextes.forEach(_cont => {
-                    let shouldIgnore = (_cont.hasOwnProperty('ignores')) ?
-                        _cont.ignores.filter(ignore => _tokens.join('-').includes(ignore.toLowerCase())).length > 0 :
-                        false;
-
-                    let shouldRequire = false;
-
-                    if (_cont.hasOwnProperty('requires')) {
-                        shouldRequire = _cont.requires.filter(require => _tokens.join('-').includes(require.toLowerCase())).length > 0;
-                    } else if (!_cont.hasOwnProperty('requires')) {
-                        shouldRequire = true;
-                    }
-
-                    if (!shouldIgnore && shouldRequire) {
-                        if(_cont.hasOwnProperty('sub_context')) {
-                            _cont.sub_context.forEach(_sub_cont => {
-                                if (index > 1 && _sub_cont.tags.includes(`${_obj.tags[index-2][0]}-${_obj.tags[index-1][0]}-${token}`) ||
-                                    index > 0 && _sub_cont.tags.includes(`${_obj.tags[index-1][0]}-${token}`) ||
-                                    _sub_cont.tags.includes(token)) {
-                                        trybreakIt();
-                                        tryContextBreak(_cont.context, _sub_cont.context);
-                                }
-                            });
-                        }
-
-                        if (contObj.context === null && contObj.sub_context === null) {
-                            if (index > 1 && _cont.tags.includes(`${_obj.tags[index-2][0]}-${_obj.tags[index-1][0]}-${token}`)) {
-                                trybreakIt();
-                                tryContextBreak(_cont.context, '');
-                                // tryContextBreak(_cont.context, `${_obj.tags[index-2][0]} ${_obj.tags[index-1][0]} ${token}`);
-                            } else if (index > 0 && _cont.tags.includes(`${_obj.tags[index-1][0]}-${token}`)) {
-                                trybreakIt();
-                                tryContextBreak(_cont.context, '');
-                                // tryContextBreak(_cont.context, `${_obj.tags[index-1][0]} ${token}`);
-                            } else if (_cont.tags.includes(token)) {
-                                trybreakIt();
-                                tryContextBreak(_cont.context, '');
-                                // tryContextBreak(_cont.context, token);
-                            }
-                        }
-                    }
-                });
-
-
-                if (!lockAction && patterns.includes(pos)) {
-                    trybreakIt();
-                    lockAction = true;
-                } else if (lockAction && lockContext && patterns.includes(pos)) {
-                    trybreakIt();
-                    lockAction = true;
-                }
-
-                contObj.tokens.push(token);
-
-                if (index === (_obj.tags.length-1) && lockAction && lockContext) {
-                    acc.push(contObj);
-                    clearContObj();
-                }
+                acc = tryToMatchContext(acc, token, index);
 
                 if (joiningWords.includes(token) && index > 1) {
                     _self.run = 'join';
@@ -566,116 +523,74 @@ export default class Language {
                 }
 
                 return acc;
-            }, []);
+            }, [])
+            .filter((guess, index, arr) => {
+                if (arr.filter(_guess => _guess.context === guess.context).length > 1 &&
+                    guess.sub_context !== '' &&
+                    guess.sub_context !== null) {
+                    return true;
+                }
+            });
+
+        console.log(_self.guesses);
 
         // try with word breaks
-        let testForBreakWord = (_startIndex, _endIndex, _run) => {
-            clearContObj();
-            _self.run = _run;
-            let hasAction = false;
-            let _objSlice = _obj.tags.slice(_startIndex, _endIndex);
+        // let testForBreakWord = (_startIndex, _endIndex, _run) => {
+        //     _self.run = _run;
+        //     let _objSlice = _obj.tags.slice(_startIndex, _endIndex);
 
-            return _objSlice
-                .reduce((acc, _tag, index) => {
-                    let token = _tag[0];
-                    let pos = _tag[1];
+        //     return _objSlice
+        //         .reduce((acc, _tag, index) => {
+        //             let token = _tag[0];
 
-                     _self.contextes.forEach(_cont => {
-                        let shouldIgnore = (_cont.hasOwnProperty('ignores')) ?
-                        _tokens.filter(token => _cont.ignores.includes(token)).length > 0 :
-                        false;
+        //             acc = tryToMatchContext(acc, token, index);
 
-                        if (!shouldIgnore) {
-                            if(_cont.hasOwnProperty('sub_context')) {
-                                _cont.sub_context.forEach(_sub_cont => {
-                                    if (index > 1 && _sub_cont.tags.includes(`${_objSlice[index-2][0]}-${_objSlice[index-1][0]}-${token}`) ||
-                                        index > 0 && _sub_cont.tags.includes(`${_objSlice[index-1][0]}-${token}`) ||
-                                        _sub_cont.tags.includes(token)) {
-                                            tryContextBreak(_cont.context, _sub_cont.context);
-                                    }
-                                });
-                            }
+        //             return acc;
+        //         }, []);
 
-                            if (contObj.context === null && contObj.sub_context === null) {
-                                if (index > 1 && _cont.tags.includes(`${_objSlice[index-2][0]}-${_objSlice[index-1][0]}-${token}`)) {
-                                    tryContextBreak(_cont.context, `${_objSlice[index-2][0]} ${_objSlice[index-1][0]} ${token}`);
-                                } else if (index > 0 && _cont.tags.includes(`${_objSlice[index-1][0]}-${token}`)) {
-                                    tryContextBreak(_cont.context, `${_objSlice[index-1][0]}-${token}`);
-                                } else if (_cont.tags.includes(token)) {
-                                    tryContextBreak(_cont.context, token);
-                                }
-                            }
-                        }
-                    });
+        // }
 
-                    if (patterns.includes(pos)) {
-                        hasAction = true;
-                    }
+        // if (_self.guesses.length === 0 || _self.guesses.length === 1  && joiningWords.some(canBreakQuery) ||
+        //     _self.guesses.length === 1  && separateWords.some(canBreakQuery)) {
+        //     // try with word breaks
+        //     _self.guesses = _obj.tags
+        //         .reduce((acc, _tag, index) => {
+        //             let token = _tag[0];
+        //             let pos = _tag[1];
 
-                    contObj.tokens.push(token);
+        //             let pushWords = (_index_, _objTags_, _run_) => {
+        //                 let rightSide = testForBreakWord(0, _index_, _run_);
+        //                 let leftSide = testForBreakWord((_index_+1), _objTags_.length, _run_);
 
-                    if (index === (_objSlice.length-1) /*&& hasAction*/) {
-                        acc = contObj;
-                    }
+        //                 if (Object.keys(rightSide).length > 0) {
+        //                     acc.push(rightSide);
+        //                 }
 
-                    return acc;
-                }, {});
+        //                 if (Object.keys(leftSide).length > 0) {
+        //                     acc.push(leftSide);
+        //                 }
+        //             };
 
-        }
+        //             if (separateWords.includes(token) && index > 1 && !joiningWords.includes(_obj.tags[index+1][0])) {
+        //                 pushWords(index, _obj.tags, 'individual');
+        //             } else if (joiningWords.includes(token) && index > 1) {
+        //                 pushWords(index, _obj.tags, 'join');
+        //             }
 
-        // see if joining or separate exist in tokens
-        let hasOneCanBreak = (__tokens__) => {
-            return __tokens__
-                .reduce((acc, _token) => {
-                    if(joiningWords.includes(_token) || separateWords.includes(_token)) {
-                        acc = true;
-                    }
+        //             return acc;
+        //         }, []);
 
-                    return acc;
-                }, false);
-        }
+        //     if (_self.guesses.length === 1) {
+        //         _self.guesses[0].tokens = _obj.tokens;
+        //     }
 
-        if (_self.guesses.length === 0 || _self.guesses.length === 1  && hasOneCanBreak(_self.guesses[0].tokens)) {
-            // try with word breaks
-            _self.guesses = _obj.tags
-                .reduce((acc, _tag, index) => {
-                    let token = _tag[0];
-                    let pos = _tag[1];
-
-                    let pushWords = (_index_, _objTags_, _run_) => {
-                        let rightSide = testForBreakWord(0, _index_, _run_);
-                        let leftSide = testForBreakWord((_index_+1), _objTags_.length, _run_);
-
-                        if (Object.keys(rightSide).length > 0) {
-                            acc.push(rightSide);
-                        }
-
-                        if (Object.keys(leftSide).length > 0) {
-                            acc.push(leftSide);
-                        }
-                    };
-
-                    if (separateWords.includes(token) && index > 1 && !joiningWords.includes(_obj.tags[index+1][0])) {
-                        pushWords(index, _obj.tags, 'individual');
-                    } else if (joiningWords.includes(token) && index > 1) {
-                        pushWords(index, _obj.tags, 'join');
-                    }
-
-                    return acc;
-                }, []);
-
-            if (_self.guesses.length === 1) {
-                _self.guesses[0].tokens = _obj.tokens;
-            }
-
-        } else  {
-            _self.run = 'individual';
-        }
+        // } else  {
+        //     _self.run = 'individual';
+        // }
 
         // start creating guesses
         if (_self.guesses.length === 0) {
-            contObj.tokens = _obj.tokens;
-            _self.guesses.push(contObj);
+            _self.guesses.push({ context: null, sub_context: null, tokens: _obj.tokens });
         }
 
         _self.doGuessProcess(_self.guesses[0], _self, _self.guesses[0].tokens);
@@ -1497,7 +1412,7 @@ export default class Language {
         // set context sub and main to '' if undefined
         let contextValue = (new_context === undefined || new_context === null) ? _self.mainContext : new_context;
         let subContextValue = (sub_context === new_context || sub_context === undefined || sub_context === null)
-            ? '': sub_context;
+            ? _self.subMainContext : sub_context;
 
         // set the crud value
         let crudValue = (memory.crud === "" || memory.crud === null) ? _self.mainCrud : memory.crud;
@@ -1514,6 +1429,7 @@ export default class Language {
 
         // set the main Context and CRUD
         _self.mainContext = contextValue;
+        _self.subMainContext = subContextValue;
         _self.mainCrud = memory.crud;
 
         // setup memory to return data in the requested format
@@ -1872,6 +1788,7 @@ export default class Language {
             ["a {0} from now", true],
             ["{0} {1} from now", true],
             ["{0} days from today", true],
+            ["{0} days from now", true],
             ["{0} weeks from today", true],
             ["the end of this day", true],
             ["the end of this week", true],
