@@ -571,8 +571,6 @@ var Language = function () {
                 }
             });
 
-            console.log(_self.guesses);
-
             // try with word breaks
             // let testForBreakWord = (_startIndex, _endIndex, _run) => {
             //     _self.run = _run;
@@ -1779,7 +1777,7 @@ var Language = function () {
         value: function getTimeFromSaying(tokensToStr) {
             var keepTimeFormat = false;
             var tense = null;
-            var timePatterns = [["this week", null], ["now", null], ["today", null], ["yesterday", false], ["tomorrow", true], ["next {0}", true], ["last {0}", false], ["{0} {1}", null], ["in an {0}", null], ["in a {0}", null], ["in {0} {1}", true], ["{0} {1} ago", false], ["the {0}{1}", null], ["next week {0}", true], ["last week {0}", false], ["the end of {0}", true], ["end of the day", true], ["end of the week", true], ["end of the month", true], ["end of the year", true], ["in half a year", true], ["in half an hour", true], ["half an hour ago", false], ["an {0} from now", true], ["a {0} from now", true], ["{0} {1} from now", true], ["{0} days from today", true], ["{0} weeks from today", true], ["the end of this day", true], ["the end of this week", true], ["the end of this month", true], ["the end of this year", true], ["beginning of the day", true], ["beginning of the week", true], ["beginning of the month", true], ["beginning of the year", true], ["the {0}{1} of {2}", null], ["the end of next {0}", true], ["the end of last {0}", false], ["the {0} day of {1}", null], ["{0} days after {1}", true], ["{0} weeks after {1}", true], ["{0} {1}{2} of last year", false], ["{0} {1}{2} of next year", true], ["{0} days after tomorrow", true], ["{0} weeks after tomorrow", true], ["the last day of {0}", true], ["the beginning of this day", true], ["the beginning of this week", true], ["the beginning of this month", true], ["the beginning of this year", true], ["the first {0} of {1}", true], ["the second {0} of {1}", true], ["the third {0} of {1}", true], ["the fourth {0} of {1}", true]];
+            var timePatterns = [["this week", null], ["now", null], ["today", null], ["yesterday", false], ["tomorrow", true], ["next {0}", true], ["last {0}", false], ["{0} {1}", null], ["in an {0}", null], ["in a {0}", null], ["in {0} {1}", true], ["in {0} days", true], ["{0} {1} ago", false], ["the {0}{1}", null], ["next week {0}", true], ["last week {0}", false], ["the end of {0}", true], ["end of the day", true], ["end of the week", true], ["end of the month", true], ["end of the year", true], ["in half a year", true], ["in half an hour", true], ["half an hour ago", false], ["an {0} from now", true], ["a {0} from now", true], ["{0} {1} from now", true], ["{0} days from today", true], ["{0} days from now", true], ["{0} weeks from today", true], ["the end of this day", true], ["the end of this week", true], ["the end of this month", true], ["the end of this year", true], ["beginning of the day", true], ["beginning of the week", true], ["beginning of the month", true], ["beginning of the year", true], ["the {0}{1} of {2}", null], ["the end of next {0}", true], ["the end of last {0}", false], ["the {0} day of {1}", null], ["{0} days after {1}", true], ["{0} weeks after {1}", true], ["{0} {1}{2} of last year", false], ["{0} {1}{2} of next year", true], ["{0} days after tomorrow", true], ["{0} weeks after tomorrow", true], ["the last day of {0}", true], ["the beginning of this day", true], ["the beginning of this week", true], ["the beginning of this month", true], ["the beginning of this year", true], ["the first {0} of {1}", true], ["the second {0} of {1}", true], ["the third {0} of {1}", true], ["the fourth {0} of {1}", true]];
 
             // check oddie times exist
             var timeStr = timePatterns.reduce(function (acc, patterns) {
@@ -1905,6 +1903,16 @@ var Language = function () {
                                     keepTimeFormat = true;
                                 }
                             }
+                        }
+                    });
+
+                    // handle number times
+                    _times2.default.numbers_spelled.forEach(function (number) {
+                        var numberDayPattern = Sugar.String.format(pattern, number);
+
+                        if (tokensToStr.includes(numberDayPattern)) {
+                            acc = numberDayPattern;
+                            tense = patterns[1];
                         }
                     });
 

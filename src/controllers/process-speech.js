@@ -505,9 +505,9 @@ export default class Language {
             return _tokens.includes(__token__);
         };
 
-        if (joiningWords.some(canBreakQuery) || separateWords.some(canBreakQuery)) {
-            console.log('CAN SPLIT');
-        }
+        // if (joiningWords.some(canBreakQuery) || separateWords.some(canBreakQuery)) {
+        //     console.log('CAN SPLIT');
+        // }
 
         // break context up
         _self.guesses = _obj.tags
@@ -531,8 +531,6 @@ export default class Language {
                     return true;
                 }
             });
-
-        console.log(_self.guesses);
 
         // try with word breaks
         // let testForBreakWord = (_startIndex, _endIndex, _run) => {
@@ -1772,6 +1770,7 @@ export default class Language {
             ["in an {0}", null],
             ["in a {0}", null],
             ["in {0} {1}", true],
+            ["in {0} days", true],
             ["{0} {1} ago", false],
             ["the {0}{1}", null],
             ["next week {0}", true],
@@ -1912,7 +1911,6 @@ export default class Language {
                         }
                     });
 
-
                     // handle day times
                     times.day_times.forEach(time => {
                         let timeDayPattern = Sugar.String.format(pattern, time);
@@ -1949,6 +1947,16 @@ export default class Language {
                                     keepTimeFormat = true;
                                 }
                             }
+                        }
+                    });
+
+                    // handle number times
+                    times.numbers_spelled.forEach(number => {
+                        let numberDayPattern = Sugar.String.format(pattern, number);
+
+                        if (tokensToStr.includes(numberDayPattern)) {
+                            acc = numberDayPattern;
+                            tense = patterns[1];
                         }
                     });
 
