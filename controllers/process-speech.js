@@ -546,9 +546,9 @@ var Language = function () {
                 return _tokens.includes(__token__);
             };
 
-            if (joiningWords.some(canBreakQuery) || separateWords.some(canBreakQuery)) {
-                console.log('CAN SPLIT');
-            }
+            // if (joiningWords.some(canBreakQuery) || separateWords.some(canBreakQuery)) {
+            //     console.log('CAN SPLIT');
+            // }
 
             // break context up
             _self.guesses = _obj.tags.reduce(function (acc, tag, index) {
@@ -564,12 +564,14 @@ var Language = function () {
 
                 return acc;
             }, []).filter(function (guess, index, arr) {
-                if (arr.filter(function (_guess) {
-                    return _guess.context === guess.context;
-                }).length > 1 && guess.sub_context !== '' && guess.sub_context !== null) {
+                console.log('ARRAY', guess, arr);
+                // arr.filter(_guess => _guess.context === guess.context).length > 1 &&
+                if (guess.sub_context !== '' && guess.sub_context !== null) {
                     return true;
                 }
             });
+
+            console.log('GUESSES', _self.guesses);
 
             // try with word breaks
             // let testForBreakWord = (_startIndex, _endIndex, _run) => {

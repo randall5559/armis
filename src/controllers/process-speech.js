@@ -525,12 +525,13 @@ export default class Language {
                 return acc;
             }, [])
             .filter((guess, index, arr) => {
-                if (arr.filter(_guess => _guess.context === guess.context).length > 1 &&
-                    guess.sub_context !== '' &&
-                    guess.sub_context !== null) {
+                // arr.filter(_guess => _guess.context === guess.context).length > 1 &&
+                if (guess.sub_context !== '' && guess.sub_context !== null) {
                     return true;
                 }
             });
+
+        console.log('GUESSES', _self.guesses);
 
         // try with word breaks
         // let testForBreakWord = (_startIndex, _endIndex, _run) => {
