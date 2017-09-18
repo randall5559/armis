@@ -531,8 +531,6 @@ export default class Language {
                 }
             });
 
-        console.log('GUESSES', _self.guesses);
-
         // try with word breaks
         // let testForBreakWord = (_startIndex, _endIndex, _run) => {
         //     _self.run = _run;

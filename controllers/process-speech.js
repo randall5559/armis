@@ -564,14 +564,11 @@ var Language = function () {
 
                 return acc;
             }, []).filter(function (guess, index, arr) {
-                console.log('ARRAY', guess, arr);
                 // arr.filter(_guess => _guess.context === guess.context).length > 1 &&
                 if (guess.sub_context !== '' && guess.sub_context !== null) {
                     return true;
                 }
             });
-
-            console.log('GUESSES', _self.guesses);
 
             // try with word breaks
             // let testForBreakWord = (_startIndex, _endIndex, _run) => {
