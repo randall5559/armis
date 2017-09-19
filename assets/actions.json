@@ -411,6 +411,8 @@
         "kill",
         "close-down",
         "shut-down",
-        "shutdown"
+        "shutdown",
+        "get-rid",
+        "rid"
    ]
 }
