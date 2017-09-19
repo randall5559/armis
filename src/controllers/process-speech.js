@@ -19,7 +19,7 @@ import Knwl from 'knwl.js';
 
 // nlp modules
 import speak from 'speakeasy-nlp';
-import nlp from 'nlp_compromise';
+// import nlp from 'nlp_compromise';
 import compromise from 'compromise';
 import pos from 'pos';
 import stem from 'stem-porter';
@@ -1680,14 +1680,13 @@ export default class Language {
     checkVerbForms(verbs) {
         if (verbs && verbs !== "") {
             let vrbs = (verbs.match(" ")) ? verbs.split(" ") : [verbs];
-            let forms = nlp.verb(vrbs).conjugate();
+            let forms = compromise(verbs).verbs().conjugate();
             let gerund = "";
 
             if(forms) {
-
-                Object.keys(forms).forEach(form => {
-                    if(form === "gerund") {
-                        gerund = forms[form];
+                forms.forEach(form => {
+                    if(form.hasOwnProperty('Gerund')) {
+                        gerund = form.Gerund;
                     }
                 });
 

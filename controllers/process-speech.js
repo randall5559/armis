@@ -40,10 +40,6 @@ var _speakeasyNlp = require('speakeasy-nlp');
 
 var _speakeasyNlp2 = _interopRequireDefault(_speakeasyNlp);
 
-var _nlp_compromise = require('nlp_compromise');
-
-var _nlp_compromise2 = _interopRequireDefault(_nlp_compromise);
-
 var _compromise = require('compromise');
 
 var _compromise2 = _interopRequireDefault(_compromise);
@@ -80,6 +76,8 @@ var Sugar = require('sugar');
 
 
 // nlp modules
+
+// import nlp from 'nlp_compromise';
 
 // import natural from 'natural';
 
@@ -1695,14 +1693,13 @@ var Language = function () {
         value: function checkVerbForms(verbs) {
             if (verbs && verbs !== "") {
                 var vrbs = verbs.match(" ") ? verbs.split(" ") : [verbs];
-                var forms = _nlp_compromise2.default.verb(vrbs).conjugate();
+                var forms = (0, _compromise2.default)(verbs).verbs().conjugate();
                 var gerund = "";
 
                 if (forms) {
-
-                    Object.keys(forms).forEach(function (form) {
-                        if (form === "gerund") {
-                            gerund = forms[form];
+                    forms.forEach(function (form) {
+                        if (form.hasOwnProperty('Gerund')) {
+                            gerund = form.Gerund;
                         }
                     });
                 }
